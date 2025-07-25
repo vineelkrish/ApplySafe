@@ -1,4 +1,4 @@
-import { analyzeJobForFraud } from './openai';
+import { analyzeJobForFraud, type FraudAnalysisResult } from './openai';
 import { storage } from '../storage';
 import type { InsertJob, Job } from '@shared/schema';
 
@@ -70,16 +70,84 @@ export function extractScamKeywords(text: string): string[] {
   return foundKeywords;
 }
 
+function performPatternBasedAnalysis(
+  title: string,
+  description: string,
+  company?: string,
+  contactEmail?: string,
+  sourceUrl?: string
+): FraudAnalysisResult {
+  const combinedText = `${title} ${description} ${company || ''} ${contactEmail || ''} ${sourceUrl || ''}`.toLowerCase();
+  
+  const scamPatterns = {
+    'unrealistic_pay': /(\$\d{3,}.*week|\$\d{4,}.*month|make.*\$\d{3,}|earn.*\$\d{3,})/i,
+    'upfront_payment': /(training fee|startup fee|registration fee|pay.*training|send money|western union)/i,
+    'no_experience': /(no experience|no skills required|anyone can do|simple work)/i,
+    'urgency': /(urgent|immediate|asap|hurry|limited time|act now)/i,
+    'work_from_home': /(work from home|remote only|homebased|work anywhere)/i,
+    'vague_description': /(data entry|copy paste|simple typing|easy work)/i,
+    'unprofessional': /(whatsapp|telegram|gmail\.com|yahoo\.com|hotmail\.com)/i,
+    'mlm_language': /(be your own boss|financial freedom|unlimited earning|residual income)/i
+  };
+  
+  const redFlags: string[] = [];
+  let riskScore = 0;
+  
+  for (const [pattern, regex] of Object.entries(scamPatterns)) {
+    if (regex.test(combinedText)) {
+      riskScore += 15;
+      switch (pattern) {
+        case 'unrealistic_pay': redFlags.push('Unrealistic salary promises'); break;
+        case 'upfront_payment': redFlags.push('Requests upfront payment'); break;
+        case 'no_experience': redFlags.push('No experience required for high pay'); break;
+        case 'urgency': redFlags.push('Creates false urgency'); break;
+        case 'work_from_home': redFlags.push('Work from home emphasis'); break;
+        case 'vague_description': redFlags.push('Vague job description'); break;
+        case 'unprofessional': redFlags.push('Unprofessional contact method'); break;
+        case 'mlm_language': redFlags.push('MLM/pyramid scheme language'); break;
+      }
+    }
+  }
+  
+  const riskLevel = riskScore > 70 ? 'high' : riskScore > 30 ? 'medium' : 'low';
+  
+  return {
+    riskScore: Math.min(100, riskScore),
+    riskLevel,
+    redFlags,
+    explanation: riskScore > 70 
+      ? `High-risk job posting with ${redFlags.length} major red flags. This appears to be a potential scam.`
+      : riskScore > 30
+      ? `Medium-risk job posting with some concerning elements. Exercise caution.`
+      : 'Low-risk job posting with minimal fraud indicators.',
+    confidence: 0.85,
+    keyPhrases: redFlags.map(flag => flag.toLowerCase())
+  };
+}
+
 export async function performComprehensiveAnalysis(jobData: InsertJob): Promise<Job> {
   try {
-    // 1. AI Analysis
-    const aiAnalysis = await analyzeJobForFraud(
-      jobData.title,
-      jobData.description,
-      jobData.company || undefined,
-      jobData.contactEmail || undefined,
-      jobData.sourceUrl || undefined
-    );
+    // 1. AI Analysis with fallback
+    let aiAnalysis: FraudAnalysisResult;
+    
+    try {
+      aiAnalysis = await analyzeJobForFraud(
+        jobData.title,
+        jobData.description,
+        jobData.company || undefined,
+        jobData.contactEmail || undefined,
+        jobData.sourceUrl || undefined
+      );
+    } catch (openaiError) {
+      console.log('OpenAI unavailable, using pattern-based analysis');
+      aiAnalysis = performPatternBasedAnalysis(
+        jobData.title,
+        jobData.description,
+        jobData.company,
+        jobData.contactEmail,
+        jobData.sourceUrl
+      );
+    }
     
     // 2. Email Validation
     let emailWarnings: string[] = [];
