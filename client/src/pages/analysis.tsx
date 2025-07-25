@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, Shield, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, Shield, AlertTriangle, Eye, Calendar, Building, Globe, Mail, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Job } from "@shared/schema";
 
 export default function Analysis() {
@@ -151,9 +152,142 @@ export default function Analysis() {
                       {new Date(job.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <Button variant="ghost" size="sm" className="text-orange-500 hover:text-orange-400">
-                        View Details
-                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-orange-500 hover:text-orange-400">
+                            <Eye className="w-4 h-4 mr-1" />
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-bold text-white flex items-center">
+                              <Target className="w-5 h-5 mr-2 text-orange-500" />
+                              Job Analysis Details
+                            </DialogTitle>
+                          </DialogHeader>
+                          
+                          <div className="space-y-6">
+                            {/* Job Information */}
+                            <div className="glass-morphism rounded-lg p-6">
+                              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                                <Building className="w-5 h-5 mr-2 text-blue-400" />
+                                Job Information
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium text-slate-400">Job Title</label>
+                                  <p className="text-white font-medium">{job.title}</p>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-slate-400">Company</label>
+                                  <p className="text-white">{job.company || 'Not specified'}</p>
+                                </div>
+                                {job.contactEmail && (
+                                  <div>
+                                    <label className="text-sm font-medium text-slate-400 flex items-center">
+                                      <Mail className="w-4 h-4 mr-1" />
+                                      Contact Email
+                                    </label>
+                                    <p className="text-white">{job.contactEmail}</p>
+                                  </div>
+                                )}
+                                {job.sourceUrl && (
+                                  <div>
+                                    <label className="text-sm font-medium text-slate-400 flex items-center">
+                                      <Globe className="w-4 h-4 mr-1" />
+                                      Source URL
+                                    </label>
+                                    <p className="text-white truncate">{job.sourceUrl}</p>
+                                  </div>
+                                )}
+                                <div>
+                                  <label className="text-sm font-medium text-slate-400 flex items-center">
+                                    <Calendar className="w-4 h-4 mr-1" />
+                                    Analysis Date
+                                  </label>
+                                  <p className="text-white">{new Date(job.createdAt).toLocaleString()}</p>
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <label className="text-sm font-medium text-slate-400">Job Description</label>
+                                <div className="mt-2 p-4 bg-slate-800/50 rounded-lg">
+                                  <p className="text-slate-200 whitespace-pre-wrap">{job.description}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Risk Assessment */}
+                            <div className="glass-morphism rounded-lg p-6">
+                              <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                                <Shield className="w-5 h-5 mr-2 text-green-400" />
+                                Risk Assessment
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-white mb-1">{Math.round(job.riskScore)}%</div>
+                                  <div className="text-sm text-slate-400">Risk Score</div>
+                                </div>
+                                <div className="text-center">
+                                  <Badge className={`${getRiskBadgeColor(job.riskLevel)} text-lg px-4 py-2`}>
+                                    {job.riskLevel.charAt(0).toUpperCase() + job.riskLevel.slice(1)} Risk
+                                  </Badge>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-3xl font-bold text-white mb-1">
+                                    {job.status === 'safe' ? '✓' : job.status === 'scam' ? '⚠' : '?'}
+                                  </div>
+                                  <div className="text-sm text-slate-400 capitalize">{job.status}</div>
+                                </div>
+                              </div>
+                              
+                              {job.aiAnalysis?.explanation && (
+                                <div className="bg-slate-800/50 rounded-lg p-4">
+                                  <h4 className="font-medium text-white mb-2">AI Analysis</h4>
+                                  <p className="text-slate-200">{job.aiAnalysis.explanation}</p>
+                                  {job.aiAnalysis.confidence && (
+                                    <div className="mt-2 text-sm text-slate-400">
+                                      Confidence: {Math.round(job.aiAnalysis.confidence * 100)}%
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Red Flags */}
+                            {job.redFlags && job.redFlags.length > 0 && (
+                              <div className="glass-morphism rounded-lg p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                                  <AlertTriangle className="w-5 h-5 mr-2 text-red-400" />
+                                  Detected Red Flags ({job.redFlags.length})
+                                </h3>
+                                <div className="space-y-2">
+                                  {job.redFlags.map((flag, index) => (
+                                    <div key={index} className="flex items-start bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                                      <AlertTriangle className="w-4 h-4 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                                      <span className="text-red-200">{flag}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Key Phrases */}
+                            {job.aiAnalysis?.keyPhrases && job.aiAnalysis.keyPhrases.length > 0 && (
+                              <div className="glass-morphism rounded-lg p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4">Suspicious Key Phrases</h3>
+                                <div className="flex flex-wrap gap-2">
+                                  {job.aiAnalysis.keyPhrases.map((phrase, index) => (
+                                    <Badge key={index} variant="outline" className="bg-amber-500/10 border-amber-500/30 text-amber-200">
+                                      {phrase}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </td>
                   </tr>
                 ))
