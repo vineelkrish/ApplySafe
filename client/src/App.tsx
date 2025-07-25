@@ -7,9 +7,7 @@ import Navigation from "@/components/navigation";
 import Home from "@/pages/home";
 import Analysis from "@/pages/analysis";
 import ScamTypes from "@/pages/scam-types";
-import Trends from "@/pages/trends";
 import Admin from "@/pages/admin";
-import Alerts from "@/pages/alerts";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,9 +18,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/analysis" component={Analysis} />
         <Route path="/scam-types" component={ScamTypes} />
-        <Route path="/trends" component={Trends} />
         <Route path="/admin" component={Admin} />
-        <Route path="/alerts" component={Alerts} />
         <Route component={NotFound} />
       </Switch>
     </div>
