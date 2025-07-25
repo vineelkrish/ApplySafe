@@ -1,0 +1,127 @@
+Build a complete full-stack web application using the MERN stack (MongoDB, Express, React, Node.js) named "ApplySafe" that detects whether a job or internship posting is fake or genuine. The system should use AI-based methods, user community signals, and data validation to protect users from scams and fraud job listings.
+
+### 🔧 Tech Stack:
+- Frontend: React.js (with Tailwind CSS or Material UI)
+- Backend: Node.js + Express.js
+- Database: MongoDB (with Mongoose)
+- External APIs: OpenAI GPT API (or HuggingFace), LinkedIn/Internshala scraping APIs (if possible), OCR (Tesseract.js), Email/Domain validation
+- Optional: Socket.io for real-time updates
+
+---
+
+### 🖥️ Frontend Requirements (React.js):
+
+1. **Home Page:**
+   - Job Posting Input Form: [Job Title, Description, Source URL, Contact Email, Attached Poster (image/pdf)]
+   - Real-time validation using AI scam detector
+   - Output Risk Level: Safe, Suspicious, or Fake
+
+2. **Result Dashboard:**
+   - AI-based Job Legitimacy Score
+   - Red Flags Summary (e.g., “Mentions ‘pay to apply’”)
+   - Suggested Action: Apply / Report / Avoid
+
+3. **Job Poster Upload:**
+   - OCR Image to Text
+   - Analyze extracted text for scam indicators
+
+4. **Company Background Check Page:**
+   - Trust Score of company
+   - Official links, scam history
+   - LinkedIn employee match
+
+5. **Community Rating Page:**
+   - Users vote: Trust/Scam
+   - Comment on their experiences
+   - Admin can verify and tag jobs
+
+6. **Fake Job Trends Page:**
+   - Charts: most common scam keywords, risky roles, sources
+   - Weekly alerts / Top reported jobs
+
+---
+
+### 🔧 Backend Features (Node.js + Express):
+
+1. **Job Analyzer API:**
+   - Input: job description, contact email, URL
+   - Output: scam probability score (0–100), reason list
+   - Use GPT API or a fine-tuned scam classification model
+
+2. **Text Classification Module:**
+   - NLP pipeline to flag scam words (“pay”, “no interview”, “WhatsApp”, etc.)
+   - Assign risk tags: ["Needs Payment", "No Domain Email", "MLM Pattern"]
+
+3. **OCR Analyzer API:**
+   - Extract text from uploaded images/posters (using Tesseract.js)
+   - Pass to same job analyzer
+
+4. **Email & Domain Validator:**
+   - Check if email is official (e.g., ends in `@gmail.com` → flag)
+   - Lookup company domain reputation (using DNS records or Trustpilot)
+
+5. **User Auth & Dashboard:**
+   - Register/login users
+   - Role-based: Student, Admin
+   - Track jobs they reported or viewed
+
+6. **Community Feedback System:**
+   - Store votes (trust or scam)
+   - Comments section
+   - Admin moderation
+
+7. **Background Job Tracer:**
+   - Optional scraping system to find similar job postings
+   - Check against known scam patterns (keywords, phone/email matches)
+
+---
+
+### 🧠 AI/ML Integration (for Node.js Backend or Python microservice):
+
+- **Job Description Classifier:**
+  - Fine-tuned transformer (BERT/GPT) or use OpenAI API
+  - Classify: Legit / Scam / Suspicious
+  - Output explanation per result
+
+- **Red Flag Phrase Highlighter:**
+  - Highlight scam-prone phrases inside the description
+
+- **Real-time Feedback Generator:**
+  - “This job looks suspicious because...”
+
+---
+
+### 🗃️ MongoDB Collections:
+
+- `users`: user accounts
+- `jobs`: job submissions + AI scores
+- `feedback`: community votes & comments
+- `companies`: verified companies + trust score
+- `scamReports`: flagged scam patterns
+- `trendStats`: for dashboard analytics
+
+---
+
+### 🛡️ Extra Features (Optional, Advanced):
+
+- Real-time job feed scanner using browser extension (React + Content Scripts)
+- Offer letter PDF validator (PDF parser + NLP risk detector)
+- Notification system (email or in-app) for flagged jobs
+- Admin dashboard for scam reports moderation
+
+---
+
+### 🌍 Deployment:
+- Use Vercel for frontend
+- Use Render or Railway for backend
+- Use MongoDB Atlas for cloud DB
+- GitHub Actions for CI/CD
+
+---
+
+### 👤 Final Deliverables:
+1. Fully functional MERN app with all core features
+2. Admin and user dashboards
+3. Clean UI/UX with simple routing (React Router)
+4. API documentation (Swagger or Postman)
+5. README with installation instructions and feature walkthrough
